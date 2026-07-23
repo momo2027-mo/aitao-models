@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AITAO Rockplate Processing ROI Calculator</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #F0F2F5;
+    color: #1A1A1A;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 480px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+  }
+  .header {
+    background: #FFFFFF;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #C8102E;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-logo {
+    width: 40px; height: 40px;
+    background: #C8102E;
+    transform: rotate(45deg);
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 14px; flex-shrink: 0;
+  }
+  .header-logo span { transform: rotate(-45deg); color: #FFF; font-size: 10px; font-weight: bold; }
+  .header-text h1 { font-size: 16px; font-weight: 700; letter-spacing: 1px; }
+  .header-text p { font-size: 10px; color: #999; margin-top: 2px; }
+  .card {
+    background: #FFF; border-radius: 12px; padding: 20px;
+    margin: 16px 16px 0;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    border: 1px solid #EFEFEF;
+  }
+  .card-title {
+    font-size: 15px; font-weight: 700; margin-bottom: 16px;
+    padding-bottom: 10px; border-bottom: 1px solid #F0F0F0;
+    display: flex; align-items: center;
+  }
+  .card-title .dot { width: 6px; height: 6px; background: #C8102E; border-radius: 50%; margin-right: 8px; }
+  .row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid #F8F8F8;
+  }
+  .row:last-child { border-bottom: none; }
+  .row label { font-size: 13px; color: #444; flex: 1; }
+  .row input {
+    width: 110px; text-align: right; border: 1px solid #DDD; border-radius: 6px;
+    padding: 8px 10px; font-size: 14px; background: #FAFAFA;
+    -webkit-appearance: none;
+  }
+  .row input:focus { border-color: #C8102E; outline: none; background: #FFF; }
+  .row .unit { font-size: 11px; color: #999; margin-left: 4px; width: 40px; }
+  .btn {
+    display: block; width: calc(100% - 32px); margin: 24px 16px 0;
+    background: #C8102E; color: #FFF; border: none; border-radius: 44px;
+    height: 52px; line-height: 52px; text-align: center; font-size: 17px;
+    font-weight: 600; cursor: pointer; letter-spacing: 1px;
+    -webkit-appearance: none;
+  }
+  .btn:active { opacity: 0.85; }
+  .btn-outline {
+    display: inline-block; padding: 8px 16px; border: 1.5px solid #1A1A1A;
+    border-radius: 24px; background: #FFF; color: #1A1A1A; font-size: 12px;
+    cursor: pointer; margin: 4px 6px 4px 0;
+    -webkit-appearance: none;
+  }
+  .btn-outline.active { background: #C8102E; border-color: #C8102E; color: #FFF; }
+  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+  .kpi { background: #F8F9FA; border-radius: 10px; padding: 14px; text-align: center; border: 1px solid #EEE; }
+  .kpi-label { font-size: 11px; color: #888; margin-bottom: 6px; }
+  .kpi-val { font-size: 20px; font-weight: 700; color: #C8102E; }
+  .kpi-unit { font-size: 11px; color: #999; margin-top: 2px; }
+  .verdict { border-radius: 10px; padding: 16px; margin-top: 12px; text-align: center; }
+  .verdict.profit { background: #E8F8E8; border: 1px solid #4CAF50; }
+  .verdict.caution { background: #FFF8E1; border: 1px solid #FF9800; }
+  .verdict.loss { background: #FFEBEE; border: 1px solid #F44336; }
+  .verdict-text { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .verdict.profit .verdict-text { color: #2E7D32; }
+  .verdict.caution .verdict-text { color: #E65100; }
+  .verdict.loss .verdict-text { color: #C62828; }
+  .verdict-detail { font-size: 12px; color: #666; }
+  .bar-row { display: flex; align-items: center; margin: 8px 0; }
+  .bar-label { width: 56px; font-size: 11px; color: #666; }
+  .bar-track { flex: 1; height: 20px; background: #F0F0F0; border-radius: 4px; overflow: hidden; margin: 0 8px; }
+  .bar-fill { height: 100%; background: linear-gradient(90deg, #C8102E, #E8475A); border-radius: 4px; }
+  .bar-val { width: 72px; font-size: 11px; color: #C8102E; text-align: right; font-weight: 600; }
+  .cost-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; border-bottom: 1px solid #F5F5F5; }
+  .cost-row span:first-child { color: #666; }
+  .cost-row span:last-child { font-weight: 600; color: #333; }
+  .adv-item { display: flex; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #F5F5F5; }
+  .adv-icon { font-size: 18px; margin-right: 10px; flex-shrink: 0; }
+  .adv-title { font-size: 13px; font-weight: 600; }
+  .adv-desc { font-size: 11px; color: #888; margin-top: 2px; }
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .compare-table th { background: #1A1A1A; color: #FFF; padding: 8px 4px; text-align: center; font-weight: 600; }
+  .compare-table th.aitao-col { background: #C8102E; }
+  .compare-table td { padding: 8px 4px; text-align: center; border-bottom: 1px solid #F0F0F0; }
+  .compare-table tr:nth-child(even) td { background: #F9F9F9; }
+  .compare-table input { width: 100%; border: 1px solid #DDD; border-radius: 4px; padding: 4px; font-size: 11px; text-align: center; -webkit-appearance: none; }
+  .tabs { display: flex; background: #FFF; position: sticky; top: 72px; z-index: 99; border-bottom: 1px solid #EEE; padding: 0 8px; }
+  .tab { flex: 1; text-align: center; padding: 12px 0; font-size: 12px; color: #999; cursor: pointer; border-bottom: 2px solid transparent; -webkit-appearance: none; }
+  .tab.active { color: #C8102E; border-bottom-color: #C8102E; font-weight: 600; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .disclaimer { margin: 24px 16px; padding: 14px 16px; background: #FFF8E1; border-left: 3px solid #FF9800; border-radius: 6px; font-size: 11px; color: #8D6E00; line-height: 1.6; }
+  .footer { text-align: center; padding: 20px 16px; font-size: 11px; color: #BBB; }
+  .hl { color: #C8102E; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo"><span>AITAO</span></div>
+  <div class="header-text">
+    <h1>AITAO Rockplate</h1>
+    <p>Processing ROI Calculator</p>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('page-home')">Home</div>
+  <div class="tab" onclick="switchTab('page-equip')">Equipment</div>
+  <div class="tab" onclick="switchTab('page-roi')">ROI</div>
+  <div class="tab" onclick="switchTab('page-compare')">Compare</div>
+</div>
+
+<!-- ==================== Home ==================== -->
+<div class="page active" id="page-home">
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Product Output (pcs/day)</div>
+    <div class="row"><label>Kitchen Countertop</label><input id="p1_daily" type="number" value="8" onchange="calcAll()"><span class="unit">pcs</span></div>
+    <div class="row"><label>Bathroom Countertop</label><input id="p2_daily" type="number" value="6" onchange="calcAll()"><span class="unit">pcs</span></div>
+    <div class="row"><label>Tea Table</label><input id="p3_daily" type="number" value="3" onchange="calcAll()"><span class="unit">pcs</span></div>
+    <div class="row"><label>Dining Table</label><input id="p4_daily" type="number" value="3" onchange="calcAll()"><span class="unit">pcs</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Per-Piece Parameters</div>
+    <div class="row"><label>Kitchen·Cutting Length</label><input id="p1_meters" type="number" value="6" step="0.1" onchange="calcAll()"><span class="unit">m/pc</span></div>
+    <div class="row"><label>Bathroom·Cutting Length</label><input id="p2_meters" type="number" value="3.4" step="0.1" onchange="calcAll()"><span class="unit">m/pc</span></div>
+    <div class="row"><label>Tea Table·Cutting Length</label><input id="p3_meters" type="number" value="3.2" step="0.1" onchange="calcAll()"><span class="unit">m/pc</span></div>
+    <div class="row"><label>Dining·Cutting Length</label><input id="p4_meters" type="number" value="4.8" step="0.1" onchange="calcAll()"><span class="unit">m/pc</span></div>
+    <div class="row"><label>Kitchen·Slab Area</label><input id="p1_area" type="number" value="3.5" step="0.1" onchange="calcAll()"><span class="unit">m2/pc</span></div>
+    <div class="row"><label>Bathroom·Slab Area</label><input id="p2_area" type="number" value="1.2" step="0.1" onchange="calcAll()"><span class="unit">m2/pc</span></div>
+    <div class="row"><label>Tea Table·Slab Area</label><input id="p3_area" type="number" value="0.64" step="0.1" onchange="calcAll()"><span class="unit">m2/pc</span></div>
+    <div class="row"><label>Dining·Slab Area</label><input id="p4_area" type="number" value="2.5" step="0.1" onchange="calcAll()"><span class="unit">m2/pc</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Operating Parameters</div>
+    <div class="row"><label>Working Hours/Day</label><input id="workHours" type="number" value="10" onchange="calcAll()"><span class="unit">hrs</span></div>
+    <div class="row"><label>Working Days/Month</label><input id="workDays" type="number" value="26" onchange="calcAll()"><span class="unit">days</span></div>
+    <div class="row"><label>Stone Price</label><input id="stonePrice" type="number" value="800" onchange="calcAll()"><span class="unit">RMB/m2</span></div>
+    <div class="row"><label>Monthly Wage</label><input id="laborMonth" type="number" value="8000" onchange="calcAll()"><span class="unit">RMB</span></div>
+    <div class="row"><label>Processing Fee</label><input id="cutPrice" type="number" value="120" onchange="calcAll()"><span class="unit">RMB/m</span></div>
+    <div class="row"><label>Equipment Investment</label><input id="equipInvest" type="number" value="580000" onchange="calcAll()"><span class="unit">RMB</span></div>
+    <div class="row"><label>Electricity Cost</label><input id="elecPrice" type="number" value="0.85" step="0.01" onchange="calcAll()"><span class="unit">RMB/kWh</span></div>
+    <div class="row"><label>Abrasive Cost</label><input id="abraPrice" type="number" value="20" onchange="calcAll()"><span class="unit">RMB/hr</span></div>
+    <div class="row"><label>Fixed Monthly Cost</label><input id="fixedCost" type="number" value="20000" onchange="calcAll()"><span class="unit">RMB</span></div>
+    <div class="row"><label>Depreciation Years</label><input id="depYears" type="number" value="5" onchange="calcAll()"><span class="unit">years</span></div>
+  </div>
+
+  <button class="btn" onclick="calcAll(); switchTab('page-roi')">Calculate ROI →</button>
+
+  <div class="card" id="result-card" style="display:none">
+    <div class="card-title"><span class="dot"></span>Result Overview</div>
+    <div class="result-grid">
+      <div class="kpi"><div class="kpi-label">Monthly Profit</div><div class="kpi-val" id="r_month">-</div><div class="kpi-unit">RMB</div></div>
+      <div class="kpi"><div class="kpi-label">Annual Profit</div><div class="kpi-val" id="r_year">-</div><div class="kpi-unit">RMB</div></div>
+      <div class="kpi"><div class="kpi-label">5-Year Total</div><div class="kpi-val" id="r_5year">-</div><div class="kpi-unit">RMB</div></div>
+      <div class="kpi"><div class="kpi-label">Payback</div><div class="kpi-val" id="r_payback">-</div><div class="kpi-unit">months</div></div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠ <strong>Disclaimer</strong>: Results are estimates based on user input. Not investment advice. Actual returns vary with market conditions, management, and equipment maintenance. Investment involves risk.
+  </div>
+</div>
+
+<!-- ==================== Equipment ==================== -->
+<div class="page" id="page-equip">
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Quick Schemes (click to auto-fill)</div>
+    <div>
+      <button class="btn-outline" id="schemeA" onclick="chooseScheme('A')">Plan A · Starter</button>
+      <button class="btn-outline" id="schemeB" onclick="chooseScheme('B')">Plan B · Standard</button>
+      <button class="btn-outline" id="schemeC" onclick="chooseScheme('C')">Plan C · Premium</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Cutting (Choose One)</div>
+    <div class="row"><label>☐ Bridge Saw</label><input id="eq_qiaoqie_price" type="number" value="140000" onchange="updateEquip()"><span class="unit">RMB</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">Qty</label><input id="eq_qiaoqie_qty" type="number" value="1" onchange="updateEquip()"><span class="unit">pcs</span></div>
+    <div class="row"><label>☐ 3-Blade CNC</label><input id="eq_sandao_price" type="number" value="120000" onchange="updateEquip()"><span class="unit">RMB</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">Qty</label><input id="eq_sandao_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">pcs</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Waterjet (Core)</div>
+    <div class="row"><label>☑ AITAO AC 5-Axis Std</label><input id="eq_aitao_std_price" type="number" value="230000" onchange="updateEquip()"><span class="unit">RMB</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">Qty</label><input id="eq_aitao_std_qty" type="number" value="1" onchange="updateEquip()"><span class="unit">pcs</span></div>
+    <div class="row"><label>☐ AITAO AC 5-Axis Pro</label><input id="eq_aitao_pro_price" type="number" value="280000" onchange="updateEquip()"><span class="unit">RMB</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">Qty</label><input id="eq_aitao_pro_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">pcs</span></div>
+    <div class="row"><label>☐ Other Brand 5-Axis</label><input id="eq_other_price" type="number" value="220000" onchange="updateEquip()"><span class="unit">RMB</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">Qty</label><input id="eq_other_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">pcs</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Chamfering (Choose One)</div>
+    <div class="row"><label>☐ 5-Head Belt Chamfer</label><input id="eq_dao5_price" type="number" value="65000" onchange="updateEquip()"><span class="unit">RMB</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">Qty</label><input id="eq_dao5_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">pcs</span></div>
+    <div class="row"><label>☐ 1+1 Fixed Cut/Grind</label><input id="eq_dao11_price" type="number" value="55000" onchange="updateEquip()"><span class="unit">RMB</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">Qty</label><input id="eq_dao11_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">pcs</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Edge Polishing</div>
+    <div class="row"><label>☐ Edge Polisher</label><input id="eq_polish_price" type="number" value="90000" onchange="updateEquip()"><span class="unit">RMB</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">Qty</label><input id="eq_polish_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">pcs</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Auxiliary</div>
+    <div class="row"><label>☐ Auto Flipper</label><input id="eq_fanban_price" type="number" value="80000" onchange="updateEquip()"><span class="unit">RMB</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">Qty</label><input id="eq_fanban_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">pcs</span></div>
+    <div class="row"><label>☐ Vacuum Lifter</label><input id="eq_vacuum_price" type="number" value="8000" onchange="updateEquip()"><span class="unit">RMB</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">Qty</label><input id="eq_vacuum_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">pcs</span></div>
+    <div class="row"><label>☐ CNC Edge Grinder</label><input id="eq_mobian_price" type="number" value="80000" onchange="updateEquip()"><span class="unit">RMB</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">Qty</label><input id="eq_mobian_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">pcs</span></div>
+  </div>
+
+  <div class="card" style="background:#F8F9FA">
+    <div class="card-title"><span class="dot"></span>Investment Summary</div>
+    <div class="cost-row"><span>Selected Equipment</span><span id="eq_count">-</span></div>
+    <div class="cost-row"><span>Total Investment</span><span class="hl" id="eq_total">-</span></div>
+    <div class="cost-row"><span>Total Power</span><span id="eq_power">-</span></div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠ Equipment prices are references. Please confirm with actual quotes. This tool is for decision support only.
+  </div>
+</div>
+
+<!-- ==================== ROI ==================== -->
+<div class="page" id="page-roi">
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Core KPIs</div>
+    <div class="result-grid">
+      <div class="kpi"><div class="kpi-label">Monthly Profit</div><div class="kpi-val" id="roi_month">-</div><div class="kpi-unit">RMB</div></div>
+      <div class="kpi"><div class="kpi-label">Annual Profit</div><div class="kpi-val" id="roi_year">-</div><div class="kpi-unit">RMB</div></div>
+      <div class="kpi"><div class="kpi-label">5-Year Total</div><div class="kpi-val" id="roi_5year">-</div><div class="kpi-unit">RMB</div></div>
+      <div class="kpi"><div class="kpi-label">Payback</div><div class="kpi-val" id="roi_payback">-</div><div class="kpi-unit">months</div></div>
+    </div>
+    <div class="verdict" id="roi_verdict" style="display:none">
+      <div class="verdict-text" id="roi_verdict_text"></div>
+      <div class="verdict-detail" id="roi_verdict_detail"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>5-Year Cash Flow (RMB)</div>
+    <div id="cashflow_bars"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Cost Breakdown (Monthly)</div>
+    <div class="cost-row"><span>Material</span><span id="c_mat">-</span></div>
+    <div class="cost-row"><span>Labor (3 workers)</span><span id="c_lab">-</span></div>
+    <div class="cost-row"><span>Electricity</span><span id="c_ele">-</span></div>
+    <div class="cost-row"><span>Abrasive</span><span id="c_abr">-</span></div>
+    <div class="cost-row"><span>Fixed Cost</span><span id="c_fix">-</span></div>
+    <div class="cost-row"><span>Depreciation</span><span id="c_dep">-</span></div>
+    <div class="cost-row"><span style="color:#C8102E;font-weight:700">Total Monthly Cost</span><span class="hl" id="c_total">-</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>AITAO Advantages</div>
+    <div class="adv-item"><span class="adv-icon">💎</span><div><div class="adv-title">30% Abrasive Savings</div><div class="adv-desc">Single-servo sand control, far below industry avg</div></div></div></div>
+    <div class="adv-item"><span class="adv-icon">🎯</span><div><div class="adv-title">Waste Rate <1%</div><div class="adv-desc">5-axis precision, minimal rework</div></div></div>
+    <div class="adv-item"><span class="adv-icon">⚡</span><div><div class="adv-title">Low Maintenance</div><div class="adv-desc">Modular design, quick parts replacement</div></div></div>
+    <div class="adv-item"><span class="adv-icon">🔧</span><div><div class="adv-title">Fast After-Sales</div><div class="adv-desc">24hr response, on-site engineer support</div></div></div>
+    <div class="adv-item"><span class="adv-icon">📈</span><div><div class="adv-title">Smart Management</div><div class="adv-desc">Cloud sync, remote equipment monitoring</div></div></div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠ Results are estimates. Not investment advice. Actual returns vary.
+  </div>
+</div>
+
+<!-- ==================== Compare ==================== -->
+<div class="page" id="page-compare">
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Brand Comparison (editable)</div>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Parameter</th>
+          <th class="aitao-col">AITAO</th>
+          <th>Brand A</th>
+          <th>Brand B</th>
+          <th>Brand C</th>
+        </tr>
+      </thead>
+      <tbody id="compare_body"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Why AITAO</div>
+    <div class="adv-item"><span class="adv-icon">🏆</span><div><div class="adv-title">Cutting-Edge Tech</div><div class="adv-desc">5-axis + single-servo sand control, industry exclusive</div></div></div>
+    <div class="adv-item"><span class="adv-icon">💰</span><div><div class="adv-title">Lowest Total Cost</div><div class="adv-desc">30% less abrasive + low waste = lowest per-piece cost</div></div></div>
+    <div class="adv-item"><span class="adv-icon">🛡️</span><div><div class="adv-title">Quality Stability</div><div class="adv-desc">Consistent precision across production batches</div></div></div>
+    <div class="adv-item"><span class="adv-icon">🤝</span><div><div class="adv-title">Full-Service Support</div><div class="adv-desc">Training + after-sales + consumables supply</div></div></div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠ Brand A/B/C are virtual codes, not real companies. Parameters editable by user. Not commercial evaluation or procurement advice.
+  </div>
+</div>
+
+<div class="footer">AITAO · Rockplate Processing Calculator · Internal Use Only</div>
+
+<script>
+var compareParams = [
+  { param: 'Investment (10k)', aitao: 58, a: 38, b: 75, c: 98 },
+  { param: 'Payback (mo)', aitao: 3.6, a: 8.2, b: 5.2, c: 5.1 },
+  { param: 'Annual Profit (10k)', aitao: 190, a: 95, b: 150, c: 220 },
+  { param: 'Waste Rate (%)', aitao: 0.8, a: 3, b: 2, c: 1.5 },
+  { param: 'Abrasive (kg/h)', aitao: 0.6, a: 1.2, b: 0.9, c: 0.8 },
+  { param: 'Power (kW)', aitao: 37, a: 30, b: 45, c: 55 },
+  { param: 'Automation (%)', aitao: 90, a: 50, b: 70, c: 85 }
+];
+
+function renderCompare() {
+  var html = '';
+  for (var i = 0; i < compareParams.length; i++) {
+    var p = compareParams[i];
+    html += '<tr><td style="text-align:left;padding-left:6px;font-weight:600">'+p.param+'</td>';
+    html += '<td><input value="'+p.aitao+'" onchange="compareParams['+i+'].aitao=Number(this.value)"></td>';
+    html += '<td><input value="'+p.a+'" onchange="compareParams['+i+'].a=Number(this.value)"></td>';
+    html += '<td><input value="'+p.b+'" onchange="compareParams['+i+'].b=Number(this.value)"></td>';
+    html += '<td><input value="'+p.c+'" onchange="compareParams['+i+'].c=Number(this.value)"></td></tr>';
+  }
+  document.getElementById('compare_body').innerHTML = html;
+}
+
+function chooseScheme(s) {
+  document.getElementById('schemeA').className = 'btn-outline' + (s==='A'?' active':'');
+  document.getElementById('schemeB').className = 'btn-outline' + (s==='B'?' active':'');
+  document.getElementById('schemeC').className = 'btn-outline' + (s==='C'?' active':'');
+  if (s==='A') {
+    setEq('qiaoqie',140000,1); setEq('sandao',0,0); setEq('aitao_std',0,0); setEq('aitao_pro',0,0);
+    setEq('other',220000,1); setEq('dao5',65000,1); setEq('dao11',0,0); setEq('polish',0,0);
+    setEq('fanban',0,0); setEq('vacuum',8000,1); setEq('mobian',0,0);
+    document.getElementById('equipInvest').value = 440000;
+  } else if (s==='B') {
+    setEq('qiaoqie',140000,1); setEq('sandao',0,0); setEq('aitao_std',230000,1); setEq('aitao_pro',0,0);
+    setEq('other',0,0); setEq('dao5',65000,1); setEq('dao11',0,0); setEq('polish',90000,1);
+    setEq('fanban',80000,1); setEq('vacuum',8000,1); setEq('mobian',0,0);
+    document.getElementById('equipInvest').value = 580000;
+  } else if (s==='C') {
+    setEq('qiaoqie',0,0); setEq('sandao',120000,1); setEq('aitao_std',0,0); setEq('aitao_pro',280000,1);
+    setEq('other',0,0); setEq('dao5',65000,1); setEq('dao11',0,0); setEq('polish',90000,1);
+    setEq('fanban',80000,1); setEq('vacuum',8000,2); setEq('mobian',80000,1);
+    document.getElementById('equipInvest').value = 720000;
+  }
+  updateEquip(); calcAll();
+}
+function setEq(name, pr, qy) {
+  document.getElementById('eq_'+name+'_price').value = pr;
+  document.getElementById('eq_'+name+'_qty').value = qy;
+}
+
+function updateEquip() {
+  var items = [
+    {p:'qiaoqie',pw:11},{p:'sandao',pw:9},{p:'aitao_std',pw:37},
+    {p:'aitao_pro',pw:37},{p:'other',pw:37},{p:'dao5',pw:7.5},
+    {p:'dao11',pw:6},{p:'polish',pw:8},{p:'fanban',pw:3},
+    {p:'vacuum',pw:0},{p:'mobian',pw:7}
+  ];
+  var total=0,count=0,power=0;
+  for (var i=0;i<items.length;i++) {
+    var pr=Number(document.getElementById(items[i].p+'_price').value)||0;
+    var qy=Number(document.getElementById(items[i].p+'_qty').value)||0;
+    if (pr>0&&qy>0) { total+=pr*qy; count+=qy; power+=items[i].pw*qy; }
+  }
+  document.getElementById('eq_total').textContent = total.toLocaleString();
+  document.getElementById('eq_count').textContent = count + ' pcs';
+  document.getElementById('eq_power').textContent = power.toFixed(1) + ' kW';
+  document.getElementById('equipInvest').value = total;
+}
+
+function calcAll() {
+  var prods = [
+    {d:N('p1_daily'),m:N('p1_meters'),a:N('p1_area')},
+    {d:N('p2_daily'),m:N('p2_meters'),a:N('p2_area')},
+    {d:N('p3_daily'),m:N('p3_meters'),a:N('p3_area')},
+    {d:N('p4_daily'),m:N('p4_meters'),a:N('p4_area')}
+  ];
+  var wd=N('workDays')||26, wh=N('workHours')||10, sp=N('stonePrice')||800;
+  var lm=N('laborMonth')||8000, cp=N('cutPrice')||120, ei=N('equipInvest')||580000;
+  var ep=N('elecPrice')||0.85, ap=N('abraPrice')||20, fc=N('fixedCost')||20000, dy=N('depYears')||5;
+
+  var tM=0,tA=0;
+  for (var i=0;i<prods.length;i++) { tM+=prods[i].d*wd*prods[i].m; tA+=prods[i].d*wd*prods[i].a; }
+  var income=tM*cp, mat=tA*sp, lab=lm*3, ele=wh*wd*45*ep, abr=wh*wd*ap*0.6, fix=fc, dep=ei/(dy*12);
+  var cost=mat+lab+ele+abr+fix+dep, profit=income-cost;
+  var pb=profit>0?(ei/profit).toFixed(1):'-', yp=profit>0?Math.round(profit*12):0, fy=profit>0?Math.round(profit*60):0;
+
+  document.getElementById('result-card').style.display='block';
+  document.getElementById('r_month').textContent=Math.round(profit).toLocaleString();
+  document.getElementById('r_year').textContent=yp.toLocaleString();
+  document.getElementById('r_5year').textContent=fy.toLocaleString();
+  document.getElementById('r_payback').textContent=pb;
+
+  document.getElementById('roi_month').textContent=Math.round(profit).toLocaleString();
+  document.getElementById('roi_year').textContent=yp.toLocaleString();
+  document.getElementById('roi_5year').textContent=fy.toLocaleString();
+  document.getElementById('roi_payback').textContent=pb;
+
+  var v=document.getElementById('roi_verdict'), vt=document.getElementById('roi_verdict_text'), vd=document.getElementById('roi_verdict_detail');
+  v.style.display='block';
+  if (profit<=0) { v.className='verdict loss'; vt.textContent='Loss Risk'; vd.textContent='Not profitable with current parameters'; }
+  else if (Number(pb)>36) { v.className='verdict caution'; vt.textContent='Long Payback'; vd.textContent='~'+pb+' months, above industry avg (36mo)'; }
+  else { v.className='verdict profit'; vt.textContent='Worth Investing'; vd.textContent='~'+pb+' months payback, annual profit '+yp.toLocaleString()+' RMB'; }
+
+  document.getElementById('c_mat').textContent=Math.round(mat).toLocaleString();
+  document.getElementById('c_lab').textContent=Math.round(lab).toLocaleString();
+  document.getElementById('c_ele').textContent=Math.round(ele).toLocaleString();
+  document.getElementById('c_abr').textContent=Math.round(abr).toLocaleString();
+  document.getElementById('c_fix').textContent=Math.round(fix).toLocaleString();
+  document.getElementById('c_dep').textContent=Math.round(dep).toLocaleString();
+  document.getElementById('c_total').textContent=Math.round(cost).toLocaleString();
+
+  var maxV=profit*1.2; if (maxV<=0) maxV=1;
+  var bars='';
+  for (var y=1;y<=5;y++) {
+    var val=Math.round(profit*(1+(y-1)*0.05)), pct=Math.min((val/maxV)*100,100);
+    bars+='<div class="bar-row"><span class="bar-label">Y'+y+'</span><div class="bar-track"><div class="bar-fill" style="width:'+pct.toFixed(1)+'%"></div></div><span class="bar-val">'+val.toLocaleString()+'</span></div>';
+  }
+  document.getElementById('cashflow_bars').innerHTML=bars;
+}
+function N(id){return Number(document.getElementById(id).value)||0;}
+
+function switchTab(pid) {
+  var ps=document.querySelectorAll('.page'); for (var i=0;i<ps.length;i++) ps[i].classList.remove('active');
+  document.getElementById(pid).classList.add('active');
+  var ts=document.querySelectorAll('.tab'); for (var i=0;i<ts.length;i++) ts[i].classList.remove('active');
+  if (pid==='page-home') ts[0].classList.add('active');
+  if (pid==='page-equip') ts[1].classList.add('active');
+  if (pid==='page-roi') ts[2].classList.add('active');
+  if (pid==='page-compare') { ts[3].classList.add('active'); renderCompare(); }
+  window.scrollTo(0,0);
+}
+
+window.onload = function() { renderCompare(); chooseScheme('B'); calcAll(); };
+</script>
+</body>
+</html>

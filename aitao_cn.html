@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>爱陶瓷板加工投资回报计算器</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #F0F2F5;
+    color: #1A1A1A;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 480px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+  }
+
+  /* 顶部品牌栏 */
+  .header {
+    background: #FFFFFF;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #C8102E;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-logo {
+    width: 40px;
+    height: 40px;
+    background: #C8102E;
+    transform: rotate(45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 14px;
+    flex-shrink: 0;
+  }
+  .header-logo span {
+    transform: rotate(-45deg);
+    color: #FFF;
+    font-size: 10px;
+    font-weight: bold;
+  }
+  .header-text h1 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1A1A1A;
+    letter-spacing: 1px;
+  }
+  .header-text p {
+    font-size: 10px;
+    color: #999;
+    margin-top: 2px;
+  }
+
+  /* 卡片 */
+  .card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 16px 0;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    border: 1px solid #EFEFEF;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #F0F0F0;
+    display: flex;
+    align-items: center;
+  }
+  .card-title .dot {
+    width: 6px;
+    height: 6px;
+    background: #C8102E;
+    border-radius: 50%;
+    margin-right: 8px;
+  }
+
+  /* 输入行 */
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #F8F8F8;
+  }
+  .row:last-child { border-bottom: none; }
+  .row label {
+    font-size: 13px;
+    color: #444;
+    flex: 1;
+  }
+  .row input {
+    width: 110px;
+    text-align: right;
+    border: 1px solid #DDD;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 14px;
+    color: #1A1A1A;
+    background: #FAFAFA;
+    -webkit-appearance: none;
+  }
+  .row input:focus {
+    border-color: #C8102E;
+    outline: none;
+    background: #FFF;
+  }
+  .row .unit {
+    font-size: 11px;
+    color: #999;
+    margin-left: 4px;
+    width: 36px;
+  }
+
+  /* 按钮 */
+  .btn {
+    display: block;
+    width: calc(100% - 32px);
+    margin: 24px 16px 0;
+    background: #C8102E;
+    color: #FFF;
+    border: none;
+    border-radius: 44px;
+    height: 52px;
+    line-height: 52px;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 2px;
+    -webkit-appearance: none;
+  }
+  .btn:active { opacity: 0.85; }
+
+  .btn-outline {
+    display: inline-block;
+    padding: 8px 18px;
+    border: 1.5px solid #1A1A1A;
+    border-radius: 24px;
+    background: #FFF;
+    color: #1A1A1A;
+    font-size: 13px;
+    cursor: pointer;
+    margin: 4px 6px 4px 0;
+    -webkit-appearance: none;
+  }
+  .btn-outline.active {
+    background: #C8102E;
+    border-color: #C8102E;
+    color: #FFF;
+  }
+
+  /* 方案按钮区 */
+  .scheme-area { margin-bottom: 8px; }
+
+  /* 结果区 */
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .kpi {
+    background: #F8F9FA;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    border: 1px solid #EEE;
+  }
+  .kpi-label {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 6px;
+  }
+  .kpi-val {
+    font-size: 20px;
+    font-weight: 700;
+    color: #C8102E;
+  }
+  .kpi-unit {
+    font-size: 11px;
+    color: #999;
+    margin-top: 2px;
+  }
+
+  /* 决策建议 */
+  .verdict {
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 12px;
+    text-align: center;
+  }
+  .verdict.profit {
+    background: #E8F8E8;
+    border: 1px solid #4CAF50;
+  }
+  .verdict.caution {
+    background: #FFF8E1;
+    border: 1px solid #FF9800;
+  }
+  .verdict.loss {
+    background: #FFEBEE;
+    border: 1px solid #F44336;
+  }
+  .verdict-text {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .verdict.profit .verdict-text { color: #2E7D32; }
+  .verdict.caution .verdict-text { color: #E65100; }
+  .verdict.loss .verdict-text { color: #C62828; }
+  .verdict-detail {
+    font-size: 12px;
+    color: #666;
+  }
+
+  /* 柱状图 */
+  .bar-row {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+  }
+  .bar-label {
+    width: 60px;
+    font-size: 11px;
+    color: #666;
+  }
+  .bar-track {
+    flex: 1;
+    height: 20px;
+    background: #F0F0F0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 0 8px;
+  }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #C8102E, #E8475A);
+    border-radius: 4px;
+    transition: width 0.5s;
+  }
+  .bar-val {
+    width: 70px;
+    font-size: 11px;
+    color: #C8102E;
+    text-align: right;
+    font-weight: 600;
+  }
+
+  /* 成本明细 */
+  .cost-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 13px;
+    border-bottom: 1px solid #F5F5F5;
+  }
+  .cost-row span:first-child { color: #666; }
+  .cost-row span:last-child { font-weight: 600; color: #333; }
+
+  /* 优势列表 */
+  .adv-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid #F5F5F5;
+  }
+  .adv-icon {
+    font-size: 18px;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+  .adv-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1A1A1A;
+  }
+  .adv-desc {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
+  }
+
+  /* 对比表 */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .compare-table th {
+    background: #1A1A1A;
+    color: #FFF;
+    padding: 8px 6px;
+    text-align: center;
+    font-weight: 600;
+  }
+  .compare-table th.aitao-col {
+    background: #C8102E;
+  }
+  .compare-table td {
+    padding: 8px 6px;
+    text-align: center;
+    border-bottom: 1px solid #F0F0F0;
+  }
+  .compare-table tr:nth-child(even) td {
+    background: #F9F9F9;
+  }
+  .compare-table input {
+    width: 100%;
+    border: 1px solid #DDD;
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 12px;
+    text-align: center;
+    -webkit-appearance: none;
+  }
+
+  /* 标签页 */
+  .tabs {
+    display: flex;
+    background: #FFF;
+    position: sticky;
+    top: 72px;
+    z-index: 99;
+    border-bottom: 1px solid #EEE;
+    padding: 0 8px;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px 0;
+    font-size: 13px;
+    color: #999;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    -webkit-appearance: none;
+  }
+  .tab.active {
+    color: #C8102E;
+    border-bottom-color: #C8102E;
+    font-weight: 600;
+  }
+
+  /* 页面切换 */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* 免责声明 */
+  .disclaimer {
+    margin: 24px 16px;
+    padding: 14px 16px;
+    background: #FFF8E1;
+    border-left: 3px solid #FF9800;
+    border-radius: 6px;
+    font-size: 11px;
+    color: #8D6E00;
+    line-height: 1.6;
+  }
+
+  /* 页脚 */
+  .footer {
+    text-align: center;
+    padding: 20px 16px;
+    font-size: 11px;
+    color: #BBB;
+  }
+
+  /* 高亮数字 */
+  .hl { color: #C8102E; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- 顶部品牌栏 -->
+<div class="header">
+  <div class="header-logo"><span>爱陶</span></div>
+  <div class="header-text">
+    <h1>AITAO 爱陶</h1>
+    <p>岩板智能加工计算器</p>
+  </div>
+</div>
+
+<!-- 标签页 -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('page-home')">首页</div>
+  <div class="tab" onclick="switchTab('page-equip')">选型</div>
+  <div class="tab" onclick="switchTab('page-roi')">ROI</div>
+  <div class="tab" onclick="switchTab('page-compare')">对比</div>
+</div>
+
+<!-- ==================== 首页 ==================== -->
+<div class="page active" id="page-home">
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>产品排产（件/天）</div>
+    <div class="row"><label>厨房台面</label><input id="p1_daily" type="number" value="8" onchange="calcAll()"><span class="unit">件/天</span></div>
+    <div class="row"><label>浴室台面</label><input id="p2_daily" type="number" value="6" onchange="calcAll()"><span class="unit">件/天</span></div>
+    <div class="row"><label>茶台</label><input id="p3_daily" type="number" value="3" onchange="calcAll()"><span class="unit">件/天</span></div>
+    <div class="row"><label>餐桌</label><input id="p4_daily" type="number" value="3" onchange="calcAll()"><span class="unit">件/天</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>单件参数</div>
+    <div class="row"><label>厨房台面·切割米数</label><input id="p1_meters" type="number" value="6" step="0.1" onchange="calcAll()"><span class="unit">米/件</span></div>
+    <div class="row"><label>浴室台面·切割米数</label><input id="p2_meters" type="number" value="3.4" step="0.1" onchange="calcAll()"><span class="unit">米/件</span></div>
+    <div class="row"><label>茶台·切割米数</label><input id="p3_meters" type="number" value="3.2" step="0.1" onchange="calcAll()"><span class="unit">米/件</span></div>
+    <div class="row"><label>餐桌·切割米数</label><input id="p4_meters" type="number" value="4.8" step="0.1" onchange="calcAll()"><span class="unit">米/件</span></div>
+    <div class="row"><label>厨房台面·板材面积</label><input id="p1_area" type="number" value="3.5" step="0.1" onchange="calcAll()"><span class="unit">㎡/件</span></div>
+    <div class="row"><label>浴室台面·板材面积</label><input id="p2_area" type="number" value="1.2" step="0.1" onchange="calcAll()"><span class="unit">㎡/件</span></div>
+    <div class="row"><label>茶台·板材面积</label><input id="p3_area" type="number" value="0.64" step="0.1" onchange="calcAll()"><span class="unit">㎡/件</span></div>
+    <div class="row"><label>餐桌·板材面积</label><input id="p4_area" type="number" value="2.5" step="0.1" onchange="calcAll()"><span class="unit">㎡/件</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>运营参数</div>
+    <div class="row"><label>日均工时</label><input id="workHours" type="number" value="10" onchange="calcAll()"><span class="unit">小时</span></div>
+    <div class="row"><label>月开工天数</label><input id="workDays" type="number" value="26" onchange="calcAll()"><span class="unit">天</span></div>
+    <div class="row"><label>板材单价</label><input id="stonePrice" type="number" value="800" onchange="calcAll()"><span class="unit">元/㎡</span></div>
+    <div class="row"><label>人均月薪</label><input id="laborMonth" type="number" value="8000" onchange="calcAll()"><span class="unit">元</span></div>
+    <div class="row"><label>加工费</label><input id="cutPrice" type="number" value="120" onchange="calcAll()"><span class="unit">元/米</span></div>
+    <div class="row"><label>设备总投资</label><input id="equipInvest" type="number" value="580000" onchange="calcAll()"><span class="unit">元</span></div>
+    <div class="row"><label>电费</label><input id="elecPrice" type="number" value="0.85" step="0.01" onchange="calcAll()"><span class="unit">元/度</span></div>
+    <div class="row"><label>磨料费</label><input id="abraPrice" type="number" value="20" onchange="calcAll()"><span class="unit">元/时</span></div>
+    <div class="row"><label>月固定开支</label><input id="fixedCost" type="number" value="20000" onchange="calcAll()"><span class="unit">元</span></div>
+    <div class="row"><label>折旧年限</label><input id="depYears" type="number" value="5" onchange="calcAll()"><span class="unit">年</span></div>
+  </div>
+
+  <button class="btn" onclick="calcAll(); switchTab('page-roi')">开始计算 ROI →</button>
+
+  <div class="card" id="result-card" style="display:none">
+    <div class="card-title"><span class="dot"></span>计算结果概览</div>
+    <div class="result-grid">
+      <div class="kpi"><div class="kpi-label">月净利润</div><div class="kpi-val" id="r_month">-</div><div class="kpi-unit">元</div></div>
+      <div class="kpi"><div class="kpi-label">年净利润</div><div class="kpi-val" id="r_year">-</div><div class="kpi-unit">元</div></div>
+      <div class="kpi"><div class="kpi-label">5年累计</div><div class="kpi-val" id="r_5year">-</div><div class="kpi-unit">元</div></div>
+      <div class="kpi"><div class="kpi-label">回收期</div><div class="kpi-val" id="r_payback">-</div><div class="kpi-unit">个月</div></div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠ <strong>免责声明</strong>：本计算器结果基于用户输入数据估算，仅供参考，不构成任何投资承诺或保证。实际收益受市场行情、管理水平、设备维护等多种因素影响。投资有风险，决策需谨慎。
+  </div>
+</div>
+
+<!-- ==================== 选型页 ==================== -->
+<div class="page" id="page-equip">
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>快速方案（点击自动填入参考价）</div>
+    <div class="scheme-area">
+      <button class="btn-outline" id="schemeA" onclick="chooseScheme('A')">方案A·经济起步</button>
+      <button class="btn-outline" id="schemeB" onclick="chooseScheme('B')">方案B·标准推荐</button>
+      <button class="btn-outline" id="schemeC" onclick="chooseScheme('C')">方案C·高端高效</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>直切开料（二选一）</div>
+    <div class="row"><label>☑ 桥切机</label><input id="eq_qiaoqie_price" type="number" value="140000" onchange="updateEquip()"><span class="unit">元</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">数量</label><input id="eq_qiaoqie_qty" type="number" value="1" onchange="updateEquip()"><span class="unit">台</span></div>
+    <div class="row"><label>☐ 三刀数控</label><input id="eq_sandao_price" type="number" value="120000" onchange="updateEquip()"><span class="unit">元</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">数量</label><input id="eq_sandao_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">台</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>水刀开孔（核心）</div>
+    <div class="row"><label>☑ 爱陶AC五轴(中配)</label><input id="eq_aitao_std_price" type="number" value="230000" onchange="updateEquip()"><span class="unit">元</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">数量</label><input id="eq_aitao_std_qty" type="number" value="1" onchange="updateEquip()"><span class="unit">台</span></div>
+    <div class="row"><label>☐ 爱陶AC五轴(高配)</label><input id="eq_aitao_pro_price" type="number" value="280000" onchange="updateEquip()"><span class="unit">元</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">数量</label><input id="eq_aitao_pro_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">台</span></div>
+    <div class="row"><label>☐ 其他品牌AC五轴</label><input id="eq_other_price" type="number" value="220000" onchange="updateEquip()"><span class="unit">元</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">数量</label><input id="eq_other_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">台</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>倒角（二选一）</div>
+    <div class="row"><label>☐ 5头皮带倒角机</label><input id="eq_dao5_price" type="number" value="65000" onchange="updateEquip()"><span class="unit">元</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">数量</label><input id="eq_dao5_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">台</span></div>
+    <div class="row"><label>☐ 1+1固定切磨</label><input id="eq_dao11_price" type="number" value="55000" onchange="updateEquip()"><span class="unit">元</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">数量</label><input id="eq_dao11_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">台</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>圆弧抛光</div>
+    <div class="row"><label>☐ 直边上下圆弧抛光机</label><input id="eq_polish_price" type="number" value="90000" onchange="updateEquip()"><span class="unit">元</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">数量</label><input id="eq_polish_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">台</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>辅助设备</div>
+    <div class="row"><label>☐ 自动翻板机</label><input id="eq_fanban_price" type="number" value="80000" onchange="updateEquip()"><span class="unit">元</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">数量</label><input id="eq_fanban_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">台</span></div>
+    <div class="row"><label>☐ 真空吸盘</label><input id="eq_vacuum_price" type="number" value="8000" onchange="updateEquip()"><span class="unit">元</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">数量</label><input id="eq_vacuum_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">个</span></div>
+    <div class="row"><label>☐ 数控磨边机</label><input id="eq_mobian_price" type="number" value="80000" onchange="updateEquip()"><span class="unit">元</span></div>
+    <div class="row"><label style="padding-left:20px;font-size:12px;color:#999">数量</label><input id="eq_mobian_qty" type="number" value="0" onchange="updateEquip()"><span class="unit">台</span></div>
+  </div>
+
+  <div class="card" style="background:#F8F9FA">
+    <div class="card-title"><span class="dot"></span>投资汇总</div>
+    <div class="cost-row"><span>已选设备</span><span id="eq_count">-</span></div>
+    <div class="cost-row"><span>设备总投资</span><span class="hl" id="eq_total">-</span></div>
+    <div class="cost-row"><span>总功率</span><span id="eq_power">-</span></div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠ 设备价格为参考值，请以实际报价为准。本工具仅辅助决策，不构成采购建议。
+  </div>
+</div>
+
+<!-- ==================== ROI页 ==================== -->
+<div class="page" id="page-roi">
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>核心KPI</div>
+    <div class="result-grid">
+      <div class="kpi"><div class="kpi-label">月净利润</div><div class="kpi-val" id="roi_month">-</div><div class="kpi-unit">元</div></div>
+      <div class="kpi"><div class="kpi-label">年净利润</div><div class="kpi-val" id="roi_year">-</div><div class="kpi-unit">元</div></div>
+      <div class="kpi"><div class="kpi-label">5年累计</div><div class="kpi-val" id="roi_5year">-</div><div class="kpi-unit">元</div></div>
+      <div class="kpi"><div class="kpi-label">回收期</div><div class="kpi-val" id="roi_payback">-</div><div class="kpi-unit">个月</div></div>
+    </div>
+    <div class="verdict" id="roi_verdict" style="display:none">
+      <div class="verdict-text" id="roi_verdict_text"></div>
+      <div class="verdict-detail" id="roi_verdict_detail"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>5年现金流预测（元）</div>
+    <div id="cashflow_bars"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>成本明细（元/月）</div>
+    <div class="cost-row"><span>材料费</span><span id="c_mat">-</span></div>
+    <div class="cost-row"><span>人工费（3人）</span><span id="c_lab">-</span></div>
+    <div class="cost-row"><span>电费</span><span id="c_ele">-</span></div>
+    <div class="cost-row"><span>磨料费</span><span id="c_abr">-</span></div>
+    <div class="cost-row"><span>固定开支</span><span id="c_fix">-</span></div>
+    <div class="cost-row"><span>折旧</span><span id="c_dep">-</span></div>
+    <div class="cost-row"><span style="color:#C8102E;font-weight:700">月总成本</span><span class="hl" id="c_total">-</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>爱陶核心优势</div>
+    <div class="adv-item"><span class="adv-icon">💎</span><div><div class="adv-title">省磨料30%</div><div class="adv-desc">单伺服控砂技术，磨料消耗远低于同行</div></div></div>
+    <div class="adv-item"><span class="adv-icon">🎯</span><div><div class="adv-title">废件率<1%</div><div class="adv-desc">五轴联动精度高，减少返工和报废</div></div></div>
+    <div class="adv-item"><span class="adv-icon">⚡</span><div><div class="adv-title">维护成本低</div><div class="adv-desc">模块化设计，关键部件易更换，停机少</div></div></div>
+    <div class="adv-item"><span class="adv-icon">🔧</span><div><div class="adv-title">售后服务快</div><div class="adv-desc">24小时响应，工程师上门支持</div></div></div>
+    <div class="adv-item"><span class="adv-icon">📈</span><div><div class="adv-title">智能化管理</div><div class="adv-desc">数据云端同步，远程监控设备状态</div></div></div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠ 本计算器结果基于用户输入数据估算，仅供参考，不构成任何投资承诺。实际收益受市场、管理、设备维护等多种因素影响。投资有风险，决策需谨慎。
+  </div>
+</div>
+
+<!-- ==================== 对比页 ==================== -->
+<div class="page" id="page-compare">
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>核心参数对比（点击可编辑）</div>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>参数</th>
+          <th class="aitao-col">爱陶</th>
+          <th>品牌A</th>
+          <th>品牌B</th>
+          <th>品牌C</th>
+        </tr>
+      </thead>
+      <tbody id="compare_body"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>爱陶差异化优势</div>
+    <div class="adv-item"><span class="adv-icon">🏆</span><div><div class="adv-title">技术领先</div><div class="adv-desc">五轴联动 + 单伺服控砂，行业独家</div></div></div>
+    <div class="adv-item"><span class="adv-icon">💰</span><div><div class="adv-title">综合成本低</div><div class="adv-desc">磨料省30% + 废件率低 = 单件成本低</div></div></div>
+    <div class="adv-item"><span class="adv-icon">🛡️</span><div><div class="adv-title">品质稳定</div><div class="adv-desc">连续加工精度保持，批次一致性好</div></div></div>
+    <div class="adv-item"><span class="adv-icon">🤝</span><div><div class="adv-title">服务完善</div><div class="adv-desc">培训+售后+耗材一站式供应</div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>选型决策建议</div>
+    <div style="font-size:13px;line-height:2;color:#444">
+      <p><strong>Q1: 日产量大于20件？</strong></p>
+      <p style="color:#666;padding-left:12px">是 → 选爱陶高配方案 | 否 → 标准方案</p>
+      <p><strong>Q2: 预算小于50万？</strong></p>
+      <p style="color:#666;padding-left:12px">是 → 方案A经济起步 | 否 → 直接上标准/高端</p>
+      <p><strong>Q3: 需要连纹/拼花？</strong></p>
+      <p style="color:#666;padding-left:12px">是 → 必须爱陶高配 | 否 → 中配够用</p>
+      <p><strong>Q4: 主要做异形加工？</strong></p>
+      <p style="color:#666;padding-left:12px">是 → 五轴必选 | 否 → 三轴可应付</p>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠ 品牌A/B/C为虚拟代号，不代表任何真实厂商。参数由用户输入，仅供参考，不构成商业评价或采购建议。投资有风险，决策需谨慎。
+  </div>
+</div>
+
+<div class="footer">AITAO 爱陶 · 岩板智能加工计算器 · 仅供内部使用</div>
+
+<script>
+// ========== 对比表数据 ==========
+var compareParams = [
+  { param: '设备投资(万)', aitao: 58, a: 38, b: 75, c: 98 },
+  { param: '回本周期(月)', aitao: 3.6, a: 8.2, b: 5.2, c: 5.1 },
+  { param: '年净利(万)', aitao: 190, a: 95, b: 150, c: 220 },
+  { param: '废件率(%)', aitao: 0.8, a: 3, b: 2, c: 1.5 },
+  { param: '磨料消耗(kg/h)', aitao: 0.6, a: 1.2, b: 0.9, c: 0.8 },
+  { param: '功率(kW)', aitao: 37, a: 30, b: 45, c: 55 },
+  { param: '自动化程度', aitao: 90, a: 50, b: 70, c: 85 }
+];
+
+function renderCompare() {
+  var html = '';
+  for (var i = 0; i < compareParams.length; i++) {
+    var p = compareParams[i];
+    html += '<tr>';
+    html += '<td style="text-align:left;padding-left:6px;font-weight:600">' + p.param + '</td>';
+    html += '<td><input value="' + p.aitao + '" onchange="compareParams[' + i + '].aitao=Number(this.value);"></td>';
+    html += '<td><input value="' + p.a + '" onchange="compareParams[' + i + '].a=Number(this.value);"></td>';
+    html += '<td><input value="' + p.b + '" onchange="compareParams[' + i + '].b=Number(this.value);"></td>';
+    html += '<td><input value="' + p.c + '" onchange="compareParams[' + i + '].c=Number(this.value);"></td>';
+    html += '</tr>';
+  }
+  document.getElementById('compare_body').innerHTML = html;
+}
+
+// ========== 方案选择 ==========
+function chooseScheme(s) {
+  document.getElementById('schemeA').className = 'btn-outline' + (s==='A'?' active':'');
+  document.getElementById('schemeB').className = 'btn-outline' + (s==='B'?' active':'');
+  document.getElementById('schemeC').className = 'btn-outline' + (s==='C'?' active':'');
+
+  if (s === 'A') {
+    document.getElementById('eq_qiaoqie_price').value = 140000; document.getElementById('eq_qiaoqie_qty').value = 1;
+    document.getElementById('eq_sandao_price').value = 0; document.getElementById('eq_sandao_qty').value = 0;
+    document.getElementById('eq_aitao_std_price').value = 0; document.getElementById('eq_aitao_std_qty').value = 0;
+    document.getElementById('eq_aitao_pro_price').value = 0; document.getElementById('eq_aitao_pro_qty').value = 0;
+    document.getElementById('eq_other_price').value = 220000; document.getElementById('eq_other_qty').value = 1;
+    document.getElementById('eq_dao5_price').value = 65000; document.getElementById('eq_dao5_qty').value = 1;
+    document.getElementById('eq_dao11_price').value = 0; document.getElementById('eq_dao11_qty').value = 0;
+    document.getElementById('eq_polish_price').value = 0; document.getElementById('eq_polish_qty').value = 0;
+    document.getElementById('eq_fanban_price').value = 0; document.getElementById('eq_fanban_qty').value = 0;
+    document.getElementById('eq_vacuum_price').value = 8000; document.getElementById('eq_vacuum_qty').value = 1;
+    document.getElementById('eq_mobian_price').value = 0; document.getElementById('eq_mobian_qty').value = 0;
+    document.getElementById('equipInvest').value = 440000;
+  } else if (s === 'B') {
+    document.getElementById('eq_qiaoqie_price').value = 140000; document.getElementById('eq_qiaoqie_qty').value = 1;
+    document.getElementById('eq_sandao_price').value = 0; document.getElementById('eq_sandao_qty').value = 0;
+    document.getElementById('eq_aitao_std_price').value = 230000; document.getElementById('eq_aitao_std_qty').value = 1;
+    document.getElementById('eq_aitao_pro_price').value = 0; document.getElementById('eq_aitao_pro_qty').value = 0;
+    document.getElementById('eq_other_price').value = 0; document.getElementById('eq_other_qty').value = 0;
+    document.getElementById('eq_dao5_price').value = 65000; document.getElementById('eq_dao5_qty').value = 1;
+    document.getElementById('eq_dao11_price').value = 0; document.getElementById('eq_dao11_qty').value = 0;
+    document.getElementById('eq_polish_price').value = 90000; document.getElementById('eq_polish_qty').value = 1;
+    document.getElementById('eq_fanban_price').value = 80000; document.getElementById('eq_fanban_qty').value = 1;
+    document.getElementById('eq_vacuum_price').value = 8000; document.getElementById('eq_vacuum_qty').value = 1;
+    document.getElementById('eq_mobian_price').value = 0; document.getElementById('eq_mobian_qty').value = 0;
+    document.getElementById('equipInvest').value = 580000;
+  } else if (s === 'C') {
+    document.getElementById('eq_qiaoqie_price').value = 0; document.getElementById('eq_qiaoqie_qty').value = 0;
+    document.getElementById('eq_sandao_price').value = 120000; document.getElementById('eq_sandao_qty').value = 1;
+    document.getElementById('eq_aitao_std_price').value = 0; document.getElementById('eq_aitao_std_qty').value = 0;
+    document.getElementById('eq_aitao_pro_price').value = 280000; document.getElementById('eq_aitao_pro_qty').value = 1;
+    document.getElementById('eq_other_price').value = 0; document.getElementById('eq_other_qty').value = 0;
+    document.getElementById('eq_dao5_price').value = 65000; document.getElementById('eq_dao5_qty').value = 1;
+    document.getElementById('eq_dao11_price').value = 0; document.getElementById('eq_dao11_qty').value = 0;
+    document.getElementById('eq_polish_price').value = 90000; document.getElementById('eq_polish_qty').value = 1;
+    document.getElementById('eq_fanban_price').value = 80000; document.getElementById('eq_fanban_qty').value = 1;
+    document.getElementById('eq_vacuum_price').value = 8000; document.getElementById('eq_vacuum_qty').value = 2;
+    document.getElementById('eq_mobian_price').value = 80000; document.getElementById('eq_mobian_qty').value = 1;
+    document.getElementById('equipInvest').value = 720000;
+  }
+  updateEquip();
+  calcAll();
+}
+
+// ========== 设备汇总 ==========
+function updateEquip() {
+  var items = [
+    { p: 'eq_qiaoqie', pw: 11 }, { p: 'eq_sandao', pw: 9 },
+    { p: 'eq_aitao_std', pw: 37 }, { p: 'eq_aitao_pro', pw: 37 },
+    { p: 'eq_other', pw: 37 }, { p: 'eq_dao5', pw: 7.5 },
+    { p: 'eq_dao11', pw: 6 }, { p: 'eq_polish', pw: 8 },
+    { p: 'eq_fanban', pw: 3 }, { p: 'eq_vacuum', pw: 0 },
+    { p: 'eq_mobian', pw: 7 }
+  ];
+  var total = 0, count = 0, power = 0;
+  for (var i = 0; i < items.length; i++) {
+    var pr = Number(document.getElementById(items[i].p + '_price').value) || 0;
+    var qy = Number(document.getElementById(items[i].p + '_qty').value) || 0;
+    if (pr > 0 && qy > 0) {
+      total += pr * qy;
+      count += qy;
+      power += items[i].pw * qy;
+    }
+  }
+  document.getElementById('eq_total').textContent = total.toLocaleString();
+  document.getElementById('eq_count').textContent = count + ' 台';
+  document.getElementById('eq_power').textContent = power.toFixed(1) + ' kW';
+  document.getElementById('equipInvest').value = total;
+}
+
+// ========== 核心计算 ==========
+function calcAll() {
+  var products = [
+    { daily: N('p1_daily'), meters: N('p1_meters'), area: N('p1_area') },
+    { daily: N('p2_daily'), meters: N('p2_meters'), area: N('p2_area') },
+    { daily: N('p3_daily'), meters: N('p3_meters'), area: N('p3_area') },
+    { daily: N('p4_daily'), meters: N('p4_meters'), area: N('p4_area') }
+  ];
+  var workDays = N('workDays') || 26;
+  var workHours = N('workHours') || 10;
+  var stonePrice = N('stonePrice') || 800;
+  var laborMonth = N('laborMonth') || 8000;
+  var cutPrice = N('cutPrice') || 120;
+  var equipInvest = N('equipInvest') || 580000;
+  var elecPrice = N('elecPrice') || 0.85;
+  var abraPrice = N('abraPrice') || 20;
+  var fixedCost = N('fixedCost') || 20000;
+  var depYears = N('depYears') || 5;
+
+  var totalMeters = 0, totalArea = 0;
+  for (var i = 0; i < products.length; i++) {
+    totalMeters += products[i].daily * workDays * products[i].meters;
+    totalArea += products[i].daily * workDays * products[i].area;
+  }
+
+  var income = totalMeters * cutPrice;
+  var mat = totalArea * stonePrice;
+  var lab = laborMonth * 3;
+  var ele = workHours * workDays * 45 * elecPrice;
+  var abr = workHours * workDays * abraPrice * 0.6;
+  var fix = fixedCost;
+  var dep = equipInvest / (depYears * 12);
+  var cost = mat + lab + ele + abr + fix + dep;
+  var profit = income - cost;
+
+  var pb = profit > 0 ? (equipInvest / profit).toFixed(1) : '-';
+  var yp = profit > 0 ? Math.round(profit * 12) : 0;
+  var fy = profit > 0 ? Math.round(profit * 60) : 0;
+
+  // 首页结果
+  document.getElementById('result-card').style.display = 'block';
+  document.getElementById('r_month').textContent = Math.round(profit).toLocaleString();
+  document.getElementById('r_year').textContent = yp.toLocaleString();
+  document.getElementById('r_5year').textContent = fy.toLocaleString();
+  document.getElementById('r_payback').textContent = pb;
+
+  // ROI页
+  document.getElementById('roi_month').textContent = Math.round(profit).toLocaleString();
+  document.getElementById('roi_year').textContent = yp.toLocaleString();
+  document.getElementById('roi_5year').textContent = fy.toLocaleString();
+  document.getElementById('roi_payback').textContent = pb;
+
+  // 决策建议
+  var v = document.getElementById('roi_verdict');
+  var vt = document.getElementById('roi_verdict_text');
+  var vd = document.getElementById('roi_verdict_detail');
+  v.style.display = 'block';
+  if (profit <= 0) {
+    v.className = 'verdict loss'; vt.textContent = '亏损风险'; vd.textContent = '当前参数下项目无法盈利，请检查数据';
+  } else if (Number(pb) > 36) {
+    v.className = 'verdict caution'; vt.textContent = '回本周期较长'; vd.textContent = '预计' + pb + '个月回本，超过行业平均36个月';
+  } else {
+    v.className = 'verdict profit'; vt.textContent = '值得投资'; vd.textContent = '预计' + pb + '个月回本，年均净利' + yp.toLocaleString() + '元，5年累计' + fy.toLocaleString() + '元';
+  }
+
+  // 成本明细
+  document.getElementById('c_mat').textContent = Math.round(mat).toLocaleString();
+  document.getElementById('c_lab').textContent = Math.round(lab).toLocaleString();
+  document.getElementById('c_ele').textContent = Math.round(ele).toLocaleString();
+  document.getElementById('c_abr').textContent = Math.round(abr).toLocaleString();
+  document.getElementById('c_fix').textContent = Math.round(fix).toLocaleString();
+  document.getElementById('c_dep').textContent = Math.round(dep).toLocaleString();
+  document.getElementById('c_total').textContent = Math.round(cost).toLocaleString();
+
+  // 现金流柱状图
+  var maxVal = profit * 1.2;
+  if (maxVal <= 0) maxVal = 1;
+  var bars = '';
+  for (var y = 1; y <= 5; y++) {
+    var val = Math.round(profit * (1 + (y-1)*0.05));
+    var pct = Math.min((val / maxVal) * 100, 100);
+    bars += '<div class="bar-row"><span class="bar-label">第' + y + '年</span><div class="bar-track"><div class="bar-fill" style="width:' + pct.toFixed(1) + '%"></div></div><span class="bar-val">' + val.toLocaleString() + '</span></div>';
+  }
+  document.getElementById('cashflow_bars').innerHTML = bars;
+}
+
+function N(id) { return Number(document.getElementById(id).value) || 0; }
+
+// ========== 标签页切换 ==========
+function switchTab(pageId) {
+  var pages = document.querySelectorAll('.page');
+  for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
+  document.getElementById(pageId).classList.add('active');
+
+  var tabs = document.querySelectorAll('.tab');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+  if (pageId === 'page-home') tabs[0].classList.add('active');
+  if (pageId === 'page-equip') tabs[1].classList.add('active');
+  if (pageId === 'page-roi') tabs[2].classList.add('active');
+  if (pageId === 'page-compare') tabs[3].classList.add('active');
+
+  if (pageId === 'page-compare') renderCompare();
+  window.scrollTo(0, 0);
+}
+
+// ========== 初始化 ==========
+window.onload = function() {
+  renderCompare();
+  chooseScheme('B');
+  calcAll();
+};
+</script>
+</body>
+</html>
